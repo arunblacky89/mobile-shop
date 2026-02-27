@@ -82,7 +82,3 @@ class ProductImage(TimeStampedModel):
 
     def __str__(self) -> str:
         return f'Image for {self.product.slug} ({self.sort_order})'
-
-from django.db import models
-
-# Create your models here.
