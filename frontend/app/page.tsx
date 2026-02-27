@@ -4,9 +4,9 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getProducts, getCategories, getBrands } from "@/lib/api";
-import type { Product, Category, Brand, Paginated } from "@/lib/types";
+import type { Product, Category, Brand } from "@/lib/types";
 
-/* ─── Static promo data (not from API) ─── */
+/* ─── Static promo data + graceful API fallbacks ─── */
 
 const DEALS = [
   { label: "₹10,000 Off", subtitle: "Flagship Phones", color: "from-orange-500 to-red-500" },
@@ -33,6 +33,120 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   laptops: "💻",
   audio: "🎵",
 };
+
+// Minimal mock data so the homepage never looks empty when API is offline.
+const MOCK_BRANDS: Brand[] = [
+  { id: 1, name: "Apple", slug: "apple" },
+  { id: 2, name: "Samsung", slug: "samsung" },
+  { id: 3, name: "OnePlus", slug: "oneplus" },
+  { id: 4, name: "Xiaomi", slug: "xiaomi" },
+  { id: 5, name: "realme", slug: "realme" },
+  { id: 6, name: "Vivo", slug: "vivo" },
+  { id: 7, name: "Oppo", slug: "oppo" },
+  { id: 8, name: "Nothing", slug: "nothing" },
+];
+
+const MOCK_CATEGORIES: Category[] = [
+  { id: 1, name: "Smartphones", slug: "smartphones", parent: null },
+  { id: 2, name: "Flagship Phones", slug: "flagship", parent: 1 },
+  { id: 3, name: "Budget Phones", slug: "budget-phones", parent: 1 },
+  { id: 4, name: "Earbuds & Audio", slug: "earbuds-headphones", parent: null },
+  { id: 5, name: "Smartwatches", slug: "smartwatches", parent: null },
+  { id: 6, name: "Power & Charging", slug: "chargers-cables", parent: null },
+  { id: 7, name: "Cases & Covers", slug: "cases-covers", parent: null },
+  { id: 8, name: "Wearables", slug: "wearables", parent: null },
+];
+
+const MOCK_PRODUCTS: Product[] = [
+  {
+    id: 1,
+    title: "iPhone 16 Pro Max 256GB",
+    slug: "iphone-16-pro-max-256gb",
+    brand: MOCK_BRANDS[0],
+    category: MOCK_CATEGORIES[1],
+    is_active: true,
+    price: 144900,
+    mrp: 154900,
+    image_url: null,
+  },
+  {
+    id: 2,
+    title: "Samsung Galaxy S25 Ultra",
+    slug: "samsung-galaxy-s25-ultra",
+    brand: MOCK_BRANDS[1],
+    category: MOCK_CATEGORIES[1],
+    is_active: true,
+    price: 129999,
+    mrp: 139999,
+    image_url: null,
+  },
+  {
+    id: 3,
+    title: "OnePlus 14R 5G",
+    slug: "oneplus-14r-5g",
+    brand: MOCK_BRANDS[2],
+    category: MOCK_CATEGORIES[2],
+    is_active: true,
+    price: 38999,
+    mrp: 42999,
+    image_url: null,
+  },
+  {
+    id: 4,
+    title: "Redmi Note 15 Pro",
+    slug: "redmi-note-15-pro",
+    brand: MOCK_BRANDS[3],
+    category: MOCK_CATEGORIES[2],
+    is_active: true,
+    price: 22999,
+    mrp: 24999,
+    image_url: null,
+  },
+  {
+    id: 5,
+    title: "Nothing Phone (3)",
+    slug: "nothing-phone-3",
+    brand: MOCK_BRANDS[7],
+    category: MOCK_CATEGORIES[0],
+    is_active: true,
+    price: 44999,
+    mrp: 49999,
+    image_url: null,
+  },
+  {
+    id: 6,
+    title: "Galaxy Buds 3 Pro",
+    slug: "galaxy-buds-3-pro",
+    brand: MOCK_BRANDS[1],
+    category: MOCK_CATEGORIES[3],
+    is_active: true,
+    price: 18999,
+    mrp: 21999,
+    image_url: null,
+  },
+  {
+    id: 7,
+    title: "Apple Watch Series 11",
+    slug: "apple-watch-series-11",
+    brand: MOCK_BRANDS[0],
+    category: MOCK_CATEGORIES[4],
+    is_active: true,
+    price: 45999,
+    mrp: 49999,
+    image_url: null,
+  },
+  {
+    id: 8,
+    title: "65W Super VOOC Charger",
+    slug: "65w-super-vooc-charger",
+    brand: MOCK_BRANDS[6],
+    category: MOCK_CATEGORIES[5],
+    is_active: true,
+    price: 2999,
+    mrp: 3499,
+    image_url: null,
+  },
+];
 
 /* ─── Helpers ─── */
 
@@ -84,6 +198,48 @@ function HeroBanner() {
         </p>
         <div className="mt-8">
           <SearchBar />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrustBadges() {
+  return (
+    <section className="border-b border-gray-200 bg-white py-4 dark:border-gray-800 dark:bg-gray-950">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-6 px-4 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40">
+            🚚
+          </span>
+          <div>
+            <p className="font-semibold">Free delivery</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              On select orders above ₹1,499
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40">
+            🔁
+          </span>
+          <div>
+            <p className="font-semibold">7‑day easy returns</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              Hassle‑free pickup & refund
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40">
+            💳
+          </span>
+          <div>
+            <p className="font-semibold">Easy EMI</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              0% EMI on leading cards
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -242,6 +398,7 @@ export default async function Home() {
   let products: Product[] = [];
   let categories: Category[] = [];
   let brands: Brand[] = [];
+  let apiOnline = false;
 
   try {
     const [productsRes, cats, brs] = await Promise.all([
@@ -252,11 +409,23 @@ export default async function Home() {
     products = productsRes.results;
     categories = cats;
     brands = brs;
+    if (products.length > 0) {
+      apiOnline = true;
+    }
   } catch {
-    // Backend API unavailable — render page with empty data
+    // Backend API unavailable — fall back to mock data
   }
 
-  const apiOnline = products.length > 0;
+  // Ensure homepage never looks empty in production: fall back to mock data.
+  if (products.length === 0) {
+    products = MOCK_PRODUCTS;
+  }
+  if (categories.length === 0) {
+    categories = MOCK_CATEGORIES;
+  }
+  if (brands.length === 0) {
+    brands = MOCK_BRANDS;
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
@@ -264,6 +433,7 @@ export default async function Home() {
 
       {/* Sections */}
       <HeroBanner />
+      <TrustBadges />
       <DealsStrip />
       <CategoryGrid categories={categories} />
       <BestSellers products={products} />
