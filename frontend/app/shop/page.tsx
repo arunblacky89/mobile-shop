@@ -4,6 +4,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getProducts, getCategories, type ProductListItem, type Category } from "@/lib/api";
+import { getProductImage } from "@/lib/imageMap";
 
 /* ─── Helpers ─── */
 
@@ -27,19 +28,14 @@ function ProductCard({ p }: { p: ProductListItem }) {
       className="group flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
     >
       {/* Image */}
-      <div className="relative flex h-52 items-center justify-center overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700">
-        {p.image_url ? (
-          <Image
-            src={p.image_url}
-            alt={p.title}
-            fill
-            className="object-cover transition group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            unoptimized
-          />
-        ) : (
-          <span className="text-6xl">📱</span>
-        )}
+      <div className="relative flex h-52 items-center justify-center overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-800">
+        <Image
+          src={p.image_url || getProductImage(p)}
+          alt={p.title}
+          fill
+          className="object-contain transition group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        />
         {discount > 0 && (
           <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
             {discount}% OFF

@@ -1,0 +1,12 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-cases" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" rx="72" fill="#020617"/>
+  <rect x="190" y="80" width="220" height="440" rx="64" fill="#020617" stroke="url(#grad-cases)" stroke-width="20"/>
+  <rect x="220" y="120" width="160" height="320" rx="40" fill="#020617"/>
+  <circle cx="300" cy="140" r="10" fill="#1f2937"/>
+</svg>

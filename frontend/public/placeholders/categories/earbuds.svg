@@ -1,0 +1,15 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-earbuds" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" rx="72" fill="#020617"/>
+  <rect x="150" y="260" width="300" height="180" rx="80" fill="#0f172a"/>
+  <rect x="170" y="280" width="260" height="120" rx="60" fill="url(#grad-earbuds)"/>
+  <circle cx="220" cy="240" r="40" fill="#0f172a"/>
+  <circle cx="380" cy="240" r="40" fill="#0f172a"/>
+  <circle cx="220" cy="240" r="22" fill="#020617"/>
+  <circle cx="380" cy="240" r="22" fill="#020617"/>
+</svg>

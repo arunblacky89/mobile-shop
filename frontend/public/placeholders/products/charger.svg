@@ -1,0 +1,14 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-phone-charger" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" rx="72" fill="#020617"/>
+  <rect x="215" y="150" width="170" height="250" rx="32" fill="url(#grad-phone-charger)"/>
+  <rect x="235" y="170" width="130" height="210" rx="24" fill="#020617"/>
+  <rect x="245" y="120" width="20" height="40" rx="8" fill="#e5e7eb"/>
+  <rect x="335" y="120" width="20" height="40" rx="8" fill="#e5e7eb"/>
+  <path d="M280 220 L310 220 L292 260 L320 260 L280 330 Z" fill="#22c55e"/>
+</svg>

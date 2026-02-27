@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getProducts, getCategories, getBrands } from "@/lib/api";
 import type { Product, Category, Brand } from "@/lib/types";
+import { getCategoryImage, getProductImage } from "@/lib/imageMap";
 
 /* ─── Static promo data + graceful API fallbacks ─── */
 
@@ -275,12 +276,26 @@ function CategoryGrid({ categories }: { categories: Category[] }) {
           <Link
             key={c.slug}
             href={`/shop?category=${c.slug}`}
-            className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-blue-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            className="flex flex-col items-center gap-3 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg dark:border-gray-700 dark:bg-gray-900"
           >
-            <span className="text-4xl">{CATEGORY_EMOJIS[c.slug] || "📦"}</span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {c.name}
-            </span>
+            <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
+              <Image
+                src={getCategoryImage(c.slug)}
+                alt={c.name}
+                fill
+                className="object-contain"
+                sizes="96px"
+                priority={false}
+              />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                {c.name}
+              </p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                Explore models
+              </p>
+            </div>
           </Link>
         ))}
       </div>
@@ -298,19 +313,15 @@ function ProductCard({ p }: { p: Product }) {
       className="group flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
     >
       {/* Image */}
-      <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700">
-        {p.image_url ? (
-          <Image
-            src={p.image_url}
-            alt={p.title}
-            fill
-            className="object-cover transition group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            unoptimized
-          />
-        ) : (
-          <span className="text-6xl">📱</span>
-        )}
+      <div className="relative flex h-56 items-center justify-center overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-800">
+        <Image
+          src={p.image_url || getProductImage(p)}
+          alt={p.title}
+          fill
+          className="object-contain transition group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          priority={false}
+        />
         {discount > 0 && (
           <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
             {discount}% OFF
