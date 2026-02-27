@@ -1,28 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 
-/* ─── Mock data (will come from API later) ─── */
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { getProducts, getCategories, getBrands } from "@/lib/api";
+import type { Product, Category, Brand, Paginated } from "@/lib/types";
 
-const CATEGORIES = [
-  { name: "Smartphones", slug: "smartphones", emoji: "📱" },
-  { name: "Tablets", slug: "tablets", emoji: "💻" },
-  { name: "Earbuds & Headphones", slug: "earbuds-headphones", emoji: "🎧" },
-  { name: "Smartwatches", slug: "smartwatches", emoji: "⌚" },
-  { name: "Chargers & Cables", slug: "chargers-cables", emoji: "🔌" },
-  { name: "Power Banks", slug: "power-banks", emoji: "🔋" },
-  { name: "Cases & Covers", slug: "cases-covers", emoji: "🛡️" },
-  { name: "Screen Protectors", slug: "screen-protectors", emoji: "🖥️" },
-];
-
-const BEST_SELLERS = [
-  { name: "iPhone 16 Pro Max", brand: "Apple", price: 144900, discount: 5, rating: 4.7, reviews: 2340, slug: "iphone-16-pro-max" },
-  { name: "Galaxy S25 Ultra", brand: "Samsung", price: 134999, discount: 8, rating: 4.6, reviews: 1890, slug: "samsung-galaxy-s25-ultra" },
-  { name: "OnePlus 13", brand: "OnePlus", price: 69999, discount: 10, rating: 4.5, reviews: 3200, slug: "oneplus-13" },
-  { name: "Pixel 9 Pro", brand: "Google", price: 109999, discount: 12, rating: 4.5, reviews: 980, slug: "google-pixel-9-pro" },
-  { name: "Redmi Note 14 Pro", brand: "Xiaomi", price: 18999, discount: 15, rating: 4.3, reviews: 12000, slug: "xiaomi-redmi-note-14-pro" },
-  { name: "AirPods Pro 2", brand: "Apple", price: 24900, discount: 10, rating: 4.8, reviews: 15000, slug: "apple-airpods-pro-2" },
-  { name: "Galaxy A55", brand: "Samsung", price: 29999, discount: 15, rating: 4.3, reviews: 4500, slug: "samsung-galaxy-a55" },
-  { name: "Apple Watch Ultra 2", brand: "Apple", price: 89900, discount: 5, rating: 4.7, reviews: 1200, slug: "apple-watch-ultra-2" },
-];
+/* ─── Static promo data (not from API) ─── */
 
 const DEALS = [
   { label: "₹10,000 Off", subtitle: "Flagship Phones", color: "from-orange-500 to-red-500" },
@@ -31,13 +15,34 @@ const DEALS = [
   { label: "New Arrivals", subtitle: "Wearables", color: "from-blue-500 to-indigo-500" },
 ];
 
+const CATEGORY_EMOJIS: Record<string, string> = {
+  smartphones: "📱",
+  tablets: "💻",
+  "earbuds-headphones": "🎧",
+  earbuds: "🎧",
+  headphones: "🎧",
+  smartwatches: "⌚",
+  wearables: "⌚",
+  "chargers-cables": "🔌",
+  chargers: "🔌",
+  "power-banks": "🔋",
+  "cases-covers": "🛡️",
+  cases: "🛡️",
+  "screen-protectors": "🖥️",
+  accessories: "🎒",
+  laptops: "💻",
+  audio: "🎵",
+};
+
 /* ─── Helpers ─── */
 
 function formatPrice(p: number) {
   return "₹" + p.toLocaleString("en-IN");
 }
-function salePrice(p: number, d: number) {
-  return Math.round(p * (1 - d / 100));
+
+function discountPercent(price: number, mrp: number) {
+  if (!mrp || mrp <= price) return 0;
+  return Math.round(((mrp - price) / mrp) * 100);
 }
 
 /* ─── Components ─── */
@@ -103,20 +108,20 @@ function DealsStrip() {
   );
 }
 
-function CategoryGrid() {
+function CategoryGrid({ categories }: { categories: Category[] }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
         Shop by Category
       </h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {CATEGORIES.map((c) => (
+        {categories.slice(0, 8).map((c) => (
           <Link
             key={c.slug}
-            href={`/category/${c.slug}`}
+            href={`/shop?category=${c.slug}`}
             className="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-blue-400 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
           >
-            <span className="text-4xl">{c.emoji}</span>
+            <span className="text-4xl">{CATEGORY_EMOJIS[c.slug] || "📦"}</span>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {c.name}
             </span>
@@ -127,49 +132,70 @@ function CategoryGrid() {
   );
 }
 
-function ProductCard({ p }: { p: (typeof BEST_SELLERS)[0] }) {
-  const sale = salePrice(p.price, p.discount);
+function ProductCard({ p }: { p: Product }) {
+  const discount =
+    p.price != null && p.mrp != null ? discountPercent(p.price, p.mrp) : 0;
+
   return (
     <Link
       href={`/product/${p.slug}`}
       className="group flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
     >
-      {/* placeholder image */}
-      <div className="flex h-48 items-center justify-center rounded-t-xl bg-gray-100 text-6xl dark:bg-gray-700">
-        📱
+      {/* Image */}
+      <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700">
+        {p.image_url ? (
+          <Image
+            src={p.image_url}
+            alt={p.title}
+            fill
+            className="object-cover transition group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            unoptimized
+          />
+        ) : (
+          <span className="text-6xl">📱</span>
+        )}
+        {discount > 0 && (
+          <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+            {discount}% OFF
+          </span>
+        )}
       </div>
+
+      {/* Info */}
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-xs font-medium text-blue-600">{p.brand}</p>
+        <p className="text-xs font-medium text-blue-600">
+          {p.brand?.name ?? ""}
+        </p>
         <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-gray-900 group-hover:text-blue-600 dark:text-white">
-          {p.name}
+          {p.title}
         </h3>
         <div className="mt-auto pt-3">
           <div className="flex items-baseline gap-2">
             <span className="text-lg font-bold text-gray-900 dark:text-white">
-              {formatPrice(sale)}
+              {p.price != null ? formatPrice(p.price) : "—"}
             </span>
-            {p.discount > 0 && (
+            {discount > 0 && p.mrp != null && (
               <>
                 <span className="text-xs text-gray-400 line-through">
-                  {formatPrice(p.price)}
+                  {formatPrice(p.mrp)}
                 </span>
                 <span className="text-xs font-semibold text-green-600">
-                  {p.discount}% off
+                  {discount}% off
                 </span>
               </>
             )}
           </div>
-          <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
-            <span className="text-yellow-500">★</span>
-            {p.rating} ({p.reviews.toLocaleString()})
-          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            {p.category?.name ?? ""}
+          </p>
         </div>
       </div>
     </Link>
   );
 }
 
-function BestSellers() {
+function BestSellers({ products }: { products: Product[] }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-6 flex items-center justify-between">
@@ -181,29 +207,28 @@ function BestSellers() {
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {BEST_SELLERS.map((p) => (
-          <ProductCard key={p.slug} p={p} />
+        {products.slice(0, 8).map((p) => (
+          <ProductCard key={p.id} p={p} />
         ))}
       </div>
     </section>
   );
 }
 
-function BrandsStrip() {
-  const brands = ["Apple", "Samsung", "OnePlus", "Xiaomi", "Realme", "Vivo", "Oppo", "Google", "Nothing", "Motorola"];
+function BrandsStrip({ brands }: { brands: Brand[] }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
       <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
         Top Brands
       </h2>
       <div className="flex flex-wrap gap-3">
-        {brands.map((b) => (
+        {brands.slice(0, 12).map((b) => (
           <Link
-            key={b}
-            href={`/brand/${b.toLowerCase()}`}
+            key={b.slug}
+            href={`/shop?brand=${b.slug}`}
             className="rounded-full border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
           >
-            {b}
+            {b.name}
           </Link>
         ))}
       </div>
@@ -211,74 +236,31 @@ function BrandsStrip() {
   );
 }
 
-function Footer() {
-  return (
-    <footer className="border-t border-gray-200 bg-gray-50 px-4 py-10 dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid gap-8 sm:grid-cols-3">
-          <div>
-            <h3 className="mb-3 text-lg font-bold text-gray-900 dark:text-white">MobileShop</h3>
-            <p className="text-sm text-gray-500">India&apos;s #1 destination for smartphones, accessories and wearables.</p>
-          </div>
-          <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase text-gray-500">Quick Links</h4>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li><Link href="/shop" className="hover:text-blue-600">All Products</Link></li>
-              <li><Link href="/deals" className="hover:text-blue-600">Today&apos;s Deals</Link></li>
-              <li><Link href="/brands" className="hover:text-blue-600">Brands</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-3 text-sm font-semibold uppercase text-gray-500">Support</h4>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li><Link href="/contact" className="hover:text-blue-600">Contact Us</Link></li>
-              <li><Link href="/faq" className="hover:text-blue-600">FAQ</Link></li>
-              <li><Link href="/returns" className="hover:text-blue-600">Returns & Refunds</Link></li>
-            </ul>
-          </div>
-        </div>
-        <p className="mt-8 text-center text-xs text-gray-400">
-          © 2026 MobileShop. All rights reserved.
-        </p>
-      </div>
-    </footer>
-  );
-}
+/* ─── Page (Server Component — fetches from Django API at build/request time) ─── */
 
-/* ─── Page ─── */
+export default async function Home() {
+  const [productsRes, categories, brands] = await Promise.all([
+    getProducts({ page: 1 }),
+    getCategories(),
+    getBrands(),
+  ]);
 
-export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-950/80">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link href="/" className="text-xl font-extrabold text-blue-600">
-            📱 MobileShop
-          </Link>
-          <div className="flex items-center gap-4 text-sm font-medium text-gray-600 dark:text-gray-300">
-            <Link href="/shop" className="hidden hover:text-blue-600 sm:inline">Shop</Link>
-            <Link href="/deals" className="hidden hover:text-blue-600 sm:inline">Deals</Link>
-            <Link href="/cart" className="relative hover:text-blue-600">
-              🛒
-              <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                0
-              </span>
-            </Link>
-            <Link href="/login" className="rounded-full bg-blue-600 px-4 py-1.5 text-white hover:bg-blue-700">
-              Login
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Sections */}
       <HeroBanner />
       <DealsStrip />
-      <CategoryGrid />
-      <BestSellers />
-      <BrandsStrip />
+      <CategoryGrid categories={categories} />
+      <BestSellers products={productsRes.results} />
+      <BrandsStrip brands={brands} />
       <Footer />
+
+      {/* Live API indicator */}
+      <div className="fixed bottom-4 right-4 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
+        ✅ Live from Django API
+      </div>
     </div>
   );
 }
