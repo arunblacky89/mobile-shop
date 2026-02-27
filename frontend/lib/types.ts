@@ -97,6 +97,7 @@ export type Order = {
   currency: string;
   items: OrderItem[];
   shipping_address: Address;
+  payment_status: string | null;
   created_at: string;
 };
 

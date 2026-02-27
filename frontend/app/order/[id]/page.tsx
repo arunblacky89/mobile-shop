@@ -127,8 +127,26 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
                 {formatPrice(order.subtotal)} {order.currency}
               </span>
             </div>
-            <div className="mt-2 inline-flex rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
-              {order.status.replace(/_/g, " ")}
+            <div className="mt-2 flex items-center gap-2">
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                  order.status === "PAID"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    : order.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                }`}
+              >
+                {order.status.replace(/_/g, " ")}
+              </span>
+              {order.payment_status === "PAID" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Payment received
+                </span>
+              )}
             </div>
           </section>
 

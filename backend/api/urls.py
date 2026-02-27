@@ -10,5 +10,6 @@ router.register(r"products", views.ProductViewSet, basename="product")
 
 urlpatterns = [
     path("health/", views.health, name="health"),
+    path("auth/register/", views.register, name="auth-register"),
     path("", include(router.urls)),
 ]

@@ -35,6 +35,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     shipping_address = AddressSerializer(read_only=True)
+    payment_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -45,8 +46,13 @@ class OrderSerializer(serializers.ModelSerializer):
             'currency',
             'items',
             'shipping_address',
+            'payment_status',
             'created_at',
         ]
+
+    def get_payment_status(self, obj):
+        payment = obj.payments.order_by('-created_at').first()
+        return payment.status if payment else None
 
 
 class CheckoutSerializer(serializers.Serializer):

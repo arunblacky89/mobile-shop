@@ -50,7 +50,7 @@ export default async function CheckoutPage() {
 
     revalidatePath("/cart");
     revalidatePath("/checkout");
-    redirect(`/order/${order.id}`);
+    redirect(`/checkout/payment/${order.id}`);
   }
 
   return (
@@ -265,12 +265,11 @@ export default async function CheckoutPage() {
                 type="submit"
                 className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
               >
-                Place Order
+                Proceed to Payment
               </button>
 
               <p className="mt-3 text-center text-xs text-gray-400">
-                Payment integration coming soon. Orders are placed as &quot;Pending
-                Payment&quot;.
+                You&apos;ll be redirected to Razorpay to complete payment.
               </p>
             </div>
           </aside>

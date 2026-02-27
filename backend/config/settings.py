@@ -166,3 +166,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
+
+# Razorpay settings
+RAZORPAY_KEY_ID = env('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = env('RAZORPAY_KEY_SECRET', default='')
+RAZORPAY_WEBHOOK_SECRET = env('RAZORPAY_WEBHOOK_SECRET', default='')

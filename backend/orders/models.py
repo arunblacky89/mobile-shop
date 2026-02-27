@@ -96,3 +96,30 @@ class OrderItem(models.Model):
     def __str__(self) -> str:
         return f"{self.product_variant.sku} x {self.quantity}"
 
+
+class Payment(models.Model):
+    class Status(models.TextChoices):
+        CREATED = "CREATED", "Created"
+        PENDING = "PENDING", "Pending"
+        PAID = "PAID", "Paid"
+        FAILED = "FAILED", "Failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="payments"
+    )
+    gateway = models.CharField(max_length=20, default="razorpay")
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=8, default="INR")
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.CREATED
+    )
+    razorpay_order_id = models.CharField(max_length=128, blank=True, default="")
+    razorpay_payment_id = models.CharField(max_length=128, blank=True, default="")
+    razorpay_signature = models.CharField(max_length=256, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"Payment {self.id} ({self.status})"
+

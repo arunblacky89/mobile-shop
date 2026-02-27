@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -8,6 +8,8 @@ from .serializers import (
     CategorySerializer,
     ProductDetailSerializer,
     ProductListSerializer,
+    RegisterSerializer,
+    UserSerializer,
 )
 
 
@@ -68,3 +70,17 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return ProductDetailSerializer
         return ProductListSerializer
+
+
+@api_view(["POST"])
+def register(request):
+    """
+    Public user registration endpoint.
+    """
+
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
