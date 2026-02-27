@@ -1,7 +1,31 @@
-import type { Brand, Category, Product, ProductDetail, ProductVariant, ProductImage, Paginated } from "./types";
+import type {
+  Brand,
+  Category,
+  Product,
+  ProductDetail,
+  ProductVariant,
+  ProductImage,
+  Paginated,
+  Cart,
+  CartItem,
+  Order,
+  CheckoutPayload,
+} from "./types";
 
 /* ─── Re-export types for convenience ─── */
-export type { Brand, Category, Product, ProductDetail, ProductVariant, ProductImage, Paginated };
+export type {
+  Brand,
+  Category,
+  Product,
+  ProductDetail,
+  ProductVariant,
+  ProductImage,
+  Paginated,
+  Cart,
+  CartItem,
+  Order,
+  CheckoutPayload,
+};
 
 // Also export old aliases so existing imports (shop page) keep working
 export type ProductListItem = Product;
@@ -74,4 +98,71 @@ export async function getCategories(): Promise<Category[]> {
 export async function getBrands(): Promise<Brand[]> {
   const res = await apiGet<Paginated<Brand>>("/api/brands/");
   return res.results;
+}
+
+/* ─── Cart API helpers ─── */
+
+export async function getCart(cartSession?: string): Promise<Cart> {
+  return apiGet<Cart>("/api/cart/", {
+    headers: cartSession ? { "X-Cart-Session": cartSession } : undefined,
+  });
+}
+
+export async function addCartItem(payload: {
+  product_variant_id: number;
+  quantity?: number;
+  cartSession?: string;
+}): Promise<CartItem> {
+  const { cartSession, ...body } = payload;
+  return apiGet<CartItem>("/api/cart/items/", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: cartSession ? { "X-Cart-Session": cartSession } : undefined,
+  } as FetchOptions);
+}
+
+export async function updateCartItem(payload: {
+  id: number;
+  quantity: number;
+  cartSession?: string;
+}): Promise<CartItem> {
+  const { id, cartSession, ...body } = payload;
+  return apiGet<CartItem>(`/api/cart/items/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+    headers: cartSession ? { "X-Cart-Session": cartSession } : undefined,
+  } as FetchOptions);
+}
+
+export async function deleteCartItem(payload: {
+  id: number;
+  cartSession?: string;
+}): Promise<void> {
+  const { id, cartSession } = payload;
+  const url = `${(process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "")}/api/cart/items/${id}/`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cartSession ? { "X-Cart-Session": cartSession } : {}),
+    },
+    cache: "no-store",
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`API ${res.status}`);
+  }
+}
+
+/* ─── Orders API helpers ─── */
+
+export async function checkout(payload: {
+  address: CheckoutPayload;
+  cartSession?: string;
+}): Promise<Order> {
+  const { address, cartSession } = payload;
+  return apiGet<Order>("/api/orders/checkout/", {
+    method: "POST",
+    body: JSON.stringify(address),
+    headers: cartSession ? { "X-Cart-Session": cartSession } : undefined,
+  } as FetchOptions);
 }

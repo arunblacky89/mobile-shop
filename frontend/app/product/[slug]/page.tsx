@@ -1,10 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getProduct, type ProductDetail, type ProductVariant } from "@/lib/api";
+import { getProduct, type ProductDetail, type ProductVariant, addCartItem } from "@/lib/api";
+import { getOrCreateCartSession } from "@/lib/cartClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -176,14 +179,28 @@ export default async function ProductPage({ params }: PageProps) {
             )}
 
             {/* Actions */}
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <form
+              className="flex flex-col gap-3 sm:flex-row"
+              action={async () => {
+                "use server";
+                if (!primaryVariant) return;
+                const session = await getOrCreateCartSession();
+                await addCartItem({
+                  product_variant_id: primaryVariant.id,
+                  quantity: 1,
+                  cartSession: session,
+                });
+                revalidatePath("/cart");
+                redirect("/cart");
+              }}
+            >
               <button
-                type="button"
+                type="submit"
                 className="inline-flex flex-1 items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
                 disabled={!primaryVariant || primaryVariant.stock_qty <= 0}
               >
                 {primaryVariant && primaryVariant.stock_qty > 0
-                  ? "Add to Cart (coming soon)"
+                  ? "Add to Cart"
                   : "Out of Stock"}
               </button>
               <button
@@ -192,7 +209,7 @@ export default async function ProductPage({ params }: PageProps) {
               >
                 Buy Now (coming soon)
               </button>
-            </div>
+            </form>
 
             {/* Description */}
             {product.description && (

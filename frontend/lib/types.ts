@@ -54,6 +54,63 @@ export type ProductDetail = {
   images: ProductImage[];
 };
 
+export type CartItem = {
+  id: number;
+  product_variant: ProductVariant;
+  quantity: number;
+  price_snapshot: number | string;
+  mrp_snapshot: number | string | null;
+};
+
+export type Cart = {
+  id: string;
+  item_count: number;
+  subtotal: number | string;
+  items: CartItem[];
+};
+
+/* ─── Order types ─── */
+
+export type Address = {
+  id: string;
+  full_name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  phone: string;
+};
+
+export type OrderItem = {
+  product_variant: ProductVariant;
+  quantity: number;
+  price_snapshot: number | string;
+  mrp_snapshot: number | string | null;
+};
+
+export type Order = {
+  id: string;
+  status: string;
+  subtotal: number | string;
+  currency: string;
+  items: OrderItem[];
+  shipping_address: Address;
+  created_at: string;
+};
+
+export type CheckoutPayload = {
+  full_name: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country?: string;
+  phone?: string;
+};
+
 export type Paginated<T> = {
   count: number;
   next: string | null;

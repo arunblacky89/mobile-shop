@@ -66,7 +66,7 @@ function SearchBar() {
 
 function HeroBanner() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-6 py-16 text-white sm:py-24">
+    <section className="relative overflow-hidden bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 px-6 py-16 text-white sm:py-24">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-white" />
         <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-white" />
@@ -97,7 +97,7 @@ function DealsStrip() {
         {DEALS.map((d) => (
           <div
             key={d.label}
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-xl bg-gradient-to-br ${d.color} p-5 text-center text-white shadow-md transition hover:scale-105`}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-xl bg-linear-to-br ${d.color} p-5 text-center text-white shadow-md transition hover:scale-105`}
           >
             <span className="text-lg font-bold">{d.label}</span>
             <span className="mt-1 text-xs opacity-90">{d.subtitle}</span>
