@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PincodeEta from "@/components/PincodeEta";
 import { getProduct, type ProductDetail, type ProductVariant, addCartItem } from "@/lib/api";
 import { getOrCreateCartSession } from "@/lib/cartClient";
 
@@ -139,6 +140,9 @@ export default async function ProductPage({ params }: PageProps) {
                 Inclusive of all taxes. Free delivery on eligible orders.
               </p>
             </div>
+
+            {/* Delivery estimate */}
+            <PincodeEta />
 
             {/* Variant picker (simple for now) */}
             {product.variants.length > 0 && (

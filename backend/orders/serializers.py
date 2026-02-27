@@ -5,7 +5,7 @@ from rest_framework import serializers
 from cart.models import Cart
 from cart.serializers import CartItemSerializer, ProductVariantMiniSerializer
 
-from .models import Address, Order, OrderItem
+from .models import Address, Order, OrderItem, Shipment, TrackingEvent
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -32,10 +32,31 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ['product_variant', 'quantity', 'price_snapshot', 'mrp_snapshot']
 
 
+class TrackingEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrackingEvent
+        fields = ['status', 'description', 'location', 'occurred_at']
+
+
+class ShipmentSerializer(serializers.ModelSerializer):
+    events = TrackingEventSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Shipment
+        fields = [
+            'carrier',
+            'tracking_number',
+            'status',
+            'estimated_delivery_date',
+            'events',
+        ]
+
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     shipping_address = AddressSerializer(read_only=True)
     payment_status = serializers.SerializerMethodField()
+    shipment = ShipmentSerializer(read_only=True)
 
     class Meta:
         model = Order
@@ -47,12 +68,21 @@ class OrderSerializer(serializers.ModelSerializer):
             'items',
             'shipping_address',
             'payment_status',
+            'shipment',
             'created_at',
         ]
 
     def get_payment_status(self, obj):
         payment = obj.payments.order_by('-created_at').first()
         return payment.status if payment else None
+
+
+class OrderTrackingSerializer(serializers.ModelSerializer):
+    shipment = ShipmentSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'status', 'shipment']
 
 
 class CheckoutSerializer(serializers.Serializer):

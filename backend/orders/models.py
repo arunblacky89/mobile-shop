@@ -123,3 +123,88 @@ class Payment(models.Model):
     def __str__(self) -> str:
         return f"Payment {self.id} ({self.status})"
 
+
+class Shipment(models.Model):
+    class Status(models.TextChoices):
+        CREATED = "CREATED", "Created"
+        PAID = "PAID", "Payment confirmed"
+        PACKED = "PACKED", "Packed"
+        SHIPPED = "SHIPPED", "Shipped"
+        DELIVERED = "DELIVERED", "Delivered"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="shipment",
+    )
+    carrier = models.CharField(max_length=32, default="mock")
+    tracking_number = models.CharField(max_length=64, blank=True, default="")
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.CREATED,
+    )
+    estimated_delivery_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"Shipment {self.id} for order {self.order_id}"
+
+
+class TrackingEvent(models.Model):
+    shipment = models.ForeignKey(
+        Shipment,
+        on_delete=models.CASCADE,
+        related_name="events",
+    )
+    status = models.CharField(max_length=32)
+    description = models.CharField(max_length=255)
+    location = models.CharField(max_length=120, blank=True, default="")
+    occurred_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["occurred_at"]
+
+    def __str__(self) -> str:
+        return f"{self.status} @ {self.occurred_at}"
+
+
+def create_default_shipment_for_order(order: Order) -> Shipment:
+    """Auto-create a Shipment + seed tracking events when order is paid."""
+    from datetime import date, timedelta
+
+    est = date.today() + timedelta(days=3)
+    shipment, _ = Shipment.objects.get_or_create(
+        order=order,
+        defaults={
+            "status": (
+                Shipment.Status.PAID
+                if order.status == Order.Status.PAID
+                else Shipment.Status.CREATED
+            ),
+            "estimated_delivery_date": est,
+        },
+    )
+    if not shipment.events.exists():
+        TrackingEvent.objects.bulk_create(
+            [
+                TrackingEvent(
+                    shipment=shipment,
+                    status="ORDER_PLACED",
+                    description="Order placed",
+                    occurred_at=order.created_at,
+                ),
+                TrackingEvent(
+                    shipment=shipment,
+                    status="PAYMENT_CONFIRMED",
+                    description="Payment confirmed",
+                    occurred_at=order.updated_at,
+                ),
+            ]
+        )
+    return shipment
+

@@ -90,6 +90,21 @@ export type OrderItem = {
   mrp_snapshot: number | string | null;
 };
 
+export type TrackingEvent = {
+  status: string;
+  description: string;
+  location: string;
+  occurred_at: string;
+};
+
+export type Shipment = {
+  carrier: string;
+  tracking_number: string;
+  status: string;
+  estimated_delivery_date: string | null;
+  events: TrackingEvent[];
+};
+
 export type Order = {
   id: string;
   status: string;
@@ -98,6 +113,7 @@ export type Order = {
   items: OrderItem[];
   shipping_address: Address;
   payment_status: string | null;
+  shipment?: Shipment | null;
   created_at: string;
 };
 

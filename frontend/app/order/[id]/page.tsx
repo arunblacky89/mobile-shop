@@ -174,6 +174,64 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
           )}
         </div>
 
+        {/* ─── Delivery Timeline ─── */}
+        {order.shipment && order.shipment.events && order.shipment.events.length > 0 && (
+          <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Delivery Timeline
+              </h2>
+              {order.shipment.estimated_delivery_date && (
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  ETA:{" "}
+                  {new Date(order.shipment.estimated_delivery_date).toLocaleDateString("en-IN", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              )}
+            </div>
+            <ol className="relative border-l border-gray-200 dark:border-gray-700">
+              {order.shipment.events.map((ev, idx) => {
+                const isLast = idx === order.shipment!.events.length - 1;
+                return (
+                  <li key={ev.occurred_at + idx} className="mb-4 ml-6 last:mb-0">
+                    <span
+                      className={`absolute -left-2 flex h-4 w-4 items-center justify-center rounded-full ring-4 ring-white dark:ring-gray-900 ${
+                        isLast
+                          ? "bg-blue-600"
+                          : "bg-gray-300 dark:bg-gray-600"
+                      }`}
+                    >
+                      {isLast && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      )}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {ev.description}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(ev.occurred_at).toLocaleString("en-IN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                        {ev.location ? ` · ${ev.location}` : ""}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            {order.shipment.tracking_number && (
+              <p className="mt-3 text-xs text-gray-400">
+                Tracking #: {order.shipment.tracking_number} ({order.shipment.carrier})
+              </p>
+            )}
+          </section>
+        )}
+
         <div className="mt-8 text-center">
           <Link
             href="/shop"

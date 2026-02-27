@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+from datetime import date, timedelta
 
 import razorpay
 from django.conf import settings
@@ -11,8 +12,8 @@ from rest_framework.response import Response
 
 from cart.views import _get_or_create_cart
 
-from .models import Order, Payment
-from .serializers import CheckoutSerializer, OrderSerializer
+from .models import Order, Payment, Shipment, TrackingEvent, create_default_shipment_for_order
+from .serializers import CheckoutSerializer, OrderSerializer, OrderTrackingSerializer
 
 
 def _get_razorpay_client():
@@ -152,5 +153,54 @@ def razorpay_webhook(request):
             payment.order.status = Order.Status.PAID
             payment.order.save(update_fields=["status", "updated_at"])
 
+            # Auto-create shipment with seed tracking events
+            create_default_shipment_for_order(payment.order)
+
     return Response({"status": "ok"})
+
+
+# ── Shipping: pincode ETA (mock) ──────────────────────────────────
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def shipping_estimate(request):
+    pincode = request.query_params.get("pincode")
+    if not pincode:
+        return Response(
+            {"detail": "pincode required"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Simple mock rule – metro cities get faster delivery
+    metro_pins = {"600001", "560001", "400001", "110001"}
+    if pincode in metro_pins:
+        min_days, max_days = 2, 3
+    else:
+        min_days, max_days = 3, 6
+
+    est_date = date.today() + timedelta(days=min_days)
+    return Response(
+        {
+            "pincode": pincode,
+            "min_days": min_days,
+            "max_days": max_days,
+            "estimated_date": est_date.isoformat(),
+        }
+    )
+
+
+# ── Order tracking ────────────────────────────────────────────────
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def order_tracking(request, id):
+    try:
+        order = Order.objects.get(id=id)
+    except Order.DoesNotExist:
+        return Response({"detail": "Order not found"}, status=404)
+
+    # Ensure a shipment exists (lazy-create for orders placed before this feature)
+    if not hasattr(order, "shipment"):
+        create_default_shipment_for_order(order)
+        order.refresh_from_db()
+
+    data = OrderTrackingSerializer(order).data
+    return Response(data)
 

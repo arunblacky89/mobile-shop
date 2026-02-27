@@ -166,3 +166,33 @@ export async function checkout(payload: {
     headers: cartSession ? { "X-Cart-Session": cartSession } : undefined,
   } as FetchOptions);
 }
+
+/* ─── Shipping / Tracking API helpers ─── */
+
+export async function getShippingEstimate(pincode: string) {
+  return apiGet<{
+    pincode: string;
+    min_days: number;
+    max_days: number;
+    estimated_date: string;
+  }>("/api/orders/shipping/estimate/", { query: { pincode } });
+}
+
+export async function getOrderTracking(id: string) {
+  return apiGet<{
+    id: string;
+    status: string;
+    shipment?: {
+      carrier: string;
+      tracking_number: string;
+      status: string;
+      estimated_delivery_date: string | null;
+      events: {
+        status: string;
+        description: string;
+        location: string;
+        occurred_at: string;
+      }[];
+    };
+  }>(`/api/orders/${id}/tracking/`);
+}
