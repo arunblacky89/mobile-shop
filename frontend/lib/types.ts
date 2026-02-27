@@ -30,8 +30,8 @@ export type Product = {
 export type ProductVariant = {
   id: number;
   sku: string;
-  price: number;
-  mrp: number | null;
+  price: number | string;
+  mrp: number | string | null;
   attributes: Record<string, unknown>;
   stock_qty: number;
 };

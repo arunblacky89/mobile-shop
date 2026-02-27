@@ -10,8 +10,9 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-function formatPrice(value: number) {
-  return "₹" + value.toLocaleString("en-IN");
+function formatPrice(value: number | string) {
+  const n = typeof value === "string" ? parseFloat(value) : value;
+  return "₹" + n.toLocaleString("en-IN");
 }
 
 function bestVariant(variants: ProductVariant[] | undefined): ProductVariant | null {
@@ -103,28 +104,29 @@ export default async function ProductPage({ params }: PageProps) {
 
             {/* Pricing */}
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-              {primaryVariant ? (
-                <div className="flex items-baseline gap-3">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatPrice(primaryVariant.price)}
-                  </span>
-                  {primaryVariant.mrp && primaryVariant.mrp > primaryVariant.price && (
-                    <>
-                      <span className="text-sm text-gray-400 line-through">
-                        {formatPrice(primaryVariant.mrp)}
-                      </span>
-                      <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
-                        {Math.round(
-                          ((primaryVariant.mrp - primaryVariant.price) /
-                            primaryVariant.mrp) *
-                            100,
-                        )}
-                        % OFF
-                      </span>
-                    </>
-                  )}
-                </div>
-              ) : (
+              {primaryVariant ? (() => {
+                const price = typeof primaryVariant.price === "string" ? parseFloat(primaryVariant.price) : primaryVariant.price;
+                const mrp = primaryVariant.mrp != null ? (typeof primaryVariant.mrp === "string" ? parseFloat(primaryVariant.mrp) : primaryVariant.mrp) : null;
+                const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+
+                return (
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {formatPrice(price)}
+                    </span>
+                    {discount > 0 && mrp != null && (
+                      <>
+                        <span className="text-sm text-gray-400 line-through">
+                          {formatPrice(mrp)}
+                        </span>
+                        <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                          {discount}% OFF
+                        </span>
+                      </>
+                    )}
+                  </div>
+                );
+              })() : (
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   Price will be available soon
                 </span>
