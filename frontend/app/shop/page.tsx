@@ -168,16 +168,25 @@ export default async function ShopPage(props: {
   const searchParams = await props.searchParams;
   const { category, brand, search, page, ordering } = searchParams;
 
-  const [productsData, categories] = await Promise.all([
-    getProducts({
-      category,
-      brand,
-      search,
-      ordering: ordering || "-created_at",
-      page: page ? Number(page) : undefined,
-    }),
-    getCategories(),
-  ]);
+  let productsData: { count: number; next: string | null; previous: string | null; results: ProductListItem[] } = { count: 0, next: null, previous: null, results: [] };
+  let categories: Category[] = [];
+
+  try {
+    const [pd, cats] = await Promise.all([
+      getProducts({
+        category,
+        brand,
+        search,
+        ordering: ordering || "-created_at",
+        page: page ? Number(page) : undefined,
+      }),
+      getCategories(),
+    ]);
+    productsData = pd;
+    categories = cats;
+  } catch {
+    // Backend API unavailable — render page with empty data
+  }
 
   const currentPage = page ? Number(page) : 1;
   const totalPages = Math.ceil(productsData.count / 20);

@@ -14,10 +14,14 @@ function formatPrice(value: number | string) {
 export default async function CartPage() {
   const cartSession = await getCartSession();
 
-  // If no session cookie exists yet, the user has never added anything
-  const cart: Cart = cartSession
-    ? await getCart(cartSession)
-    : { id: "", item_count: 0, subtotal: "0.00", items: [] };
+  let cart: Cart = { id: "", item_count: 0, subtotal: "0.00", items: [] };
+  try {
+    if (cartSession) {
+      cart = await getCart(cartSession);
+    }
+  } catch {
+    // Backend API unavailable — show empty cart
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">

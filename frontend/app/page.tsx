@@ -239,11 +239,24 @@ function BrandsStrip({ brands }: { brands: Brand[] }) {
 /* ─── Page (Server Component — fetches from Django API at build/request time) ─── */
 
 export default async function Home() {
-  const [productsRes, categories, brands] = await Promise.all([
-    getProducts({ page: 1 }),
-    getCategories(),
-    getBrands(),
-  ]);
+  let products: Product[] = [];
+  let categories: Category[] = [];
+  let brands: Brand[] = [];
+
+  try {
+    const [productsRes, cats, brs] = await Promise.all([
+      getProducts({ page: 1 }),
+      getCategories(),
+      getBrands(),
+    ]);
+    products = productsRes.results;
+    categories = cats;
+    brands = brs;
+  } catch {
+    // Backend API unavailable — render page with empty data
+  }
+
+  const apiOnline = products.length > 0;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
@@ -253,14 +266,16 @@ export default async function Home() {
       <HeroBanner />
       <DealsStrip />
       <CategoryGrid categories={categories} />
-      <BestSellers products={productsRes.results} />
+      <BestSellers products={products} />
       <BrandsStrip brands={brands} />
       <Footer />
 
       {/* Live API indicator */}
-      <div className="fixed bottom-4 right-4 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
-        ✅ Live from Django API
-      </div>
+      {apiOnline && (
+        <div className="fixed bottom-4 right-4 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
+          ✅ Live from Django API
+        </div>
+      )}
     </div>
   );
 }

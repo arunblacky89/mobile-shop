@@ -16,9 +16,14 @@ function formatPrice(value: number | string) {
 export default async function CheckoutPage() {
   const cartSession = await getCartSession();
 
-  const cart: Cart = cartSession
-    ? await getCart(cartSession)
-    : { id: "", item_count: 0, subtotal: "0.00", items: [] };
+  let cart: Cart = { id: "", item_count: 0, subtotal: "0.00", items: [] };
+  try {
+    if (cartSession) {
+      cart = await getCart(cartSession);
+    }
+  } catch {
+    // Backend API unavailable — treat as empty cart
+  }
 
   // Redirect to cart if empty
   if (cart.items.length === 0) {
